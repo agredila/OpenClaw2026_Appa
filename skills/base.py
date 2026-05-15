@@ -86,8 +86,58 @@ def read_pipeline(pipeline_id: str) -> Optional[dict]:
 
 
 def read_user_profile(user_id: str) -> Optional[dict]:
+    """
+    Read user profile from Firestore.
+    Falls back to QwenPaw memory file if Firestore has no profile.
+    """
     doc = db().collection("user_profiles").document(user_id).get()
-    return doc.to_dict() if doc.exists else None
+    if doc.exists:
+        return doc.to_dict()
+    # Fallback: try reading from QwenPaw's PROFILE.md in working directory
+    return _read_profile_from_memory(user_id)
+
+
+def _read_profile_from_memory(user_id: str) -> Optional[dict]:
+    """Parse user profile from QwenPaw's PROFILE.md if it exists."""
+    import re
+    profile_paths = [
+        "/app/working/PROFILE.md",
+        os.path.expanduser("~/.qwenpaw/PROFILE.md"),
+        "PROFILE.md",
+    ]
+    for path in profile_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    content = f.read()
+                # Extract User Profile section
+                match = re.search(r"User Profile\s*\n(.*?)(?:\n#|\Z)", content, re.DOTALL)
+                if not match:
+                    continue
+                section = match.group(1)
+                profile = {"user_id": user_id}
+                for line in section.splitlines():
+                    line = line.strip().lstrip("•-").strip()
+                    if ":" not in line:
+                        continue
+                    key, _, val = line.partition(":")
+                    key = key.strip().lower().replace(" ", "_")
+                    val = val.strip()
+                    if key == "skills":
+                        profile["skills"] = [s.strip() for s in val.split(",") if s.strip()]
+                    elif key in ("rate", "hourly_rate"):
+                        profile["hourly_rate"] = val
+                    elif key in ("preferred_categories", "categories"):
+                        profile["preferred_categories"] = [s.strip() for s in val.split(",") if s.strip()]
+                    elif key in ("blacklist", "blacklist_keywords"):
+                        profile["blacklist_keywords"] = [s.strip() for s in val.split(",") if s.strip()]
+                    elif key == "name":
+                        profile["name"] = val
+                if len(profile) > 1:  # Has more than just user_id
+                    return profile
+            except Exception:
+                continue
+    return None
 
 
 def write_contact(contact_id: str, data: dict) -> None:

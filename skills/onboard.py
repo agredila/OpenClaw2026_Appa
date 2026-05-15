@@ -21,26 +21,61 @@ from skills.base import db, now_iso
 
 def setup(chat_id: str, answers: dict) -> None:
     """
-    Save user profile from /setup onboarding answers.
-
-    answers = {
-        "skills": ["Python", "API integration", "FastAPI"],
-        "hourly_rate": "8-10jt/project",
-        "preferred_categories": ["backend", "API", "automation"],
-        "blacklist_keywords": ["design", "UI", "logo"]
-    }
+    Save user profile from onboarding answers.
+    Writes to Firestore (primary) and PROFILE.md (fallback for QwenPaw memory).
     """
-    db().collection("user_profiles").document(chat_id).set({
+    profile = {
         "user_id": chat_id,
+        "name": answers.get("name", ""),
         "skills": answers.get("skills", []),
         "hourly_rate": answers.get("hourly_rate", ""),
         "preferred_categories": answers.get("preferred_categories", []),
         "blacklist_keywords": answers.get("blacklist_keywords", []),
-        "scoring_criteria": "",        # Will be populated by APPA Learner after first feedback
+        "scoring_criteria": "",
         "scoring_prompt_version": 1,
         "created_at": now_iso(),
         "updated_at": now_iso(),
-    }, merge=True)
+    }
+    # Primary: Firestore
+    try:
+        db().collection("user_profiles").document(chat_id).set(profile, merge=True)
+    except Exception:
+        pass  # Firestore not configured yet — fallback to PROFILE.md
+
+    # Fallback: write structured data to PROFILE.md for QwenPaw memory
+    _write_profile_to_memory(profile)
+
+
+def _write_profile_to_memory(profile: dict) -> None:
+    """Append/update User Profile section in PROFILE.md."""
+    import re
+    profile_paths = ["/app/working/PROFILE.md", "PROFILE.md"]
+    skills_str = ", ".join(profile.get("skills", []))
+    categories_str = ", ".join(profile.get("preferred_categories", []))
+    blacklist_str = ", ".join(profile.get("blacklist_keywords", [])) or "tidak ada"
+
+    new_section = f"""User Profile
+- Name: {profile.get('name', 'unknown')}
+- Chat ID: {profile.get('user_id', 'unknown')}
+- Skills: {skills_str}
+- Hourly Rate: {profile.get('hourly_rate', 'unknown')}
+- Preferred Categories: {categories_str}
+- Blacklist Keywords: {blacklist_str}
+"""
+    for path in profile_paths:
+        try:
+            if os.path.exists(path):
+                with open(path, "r") as f:
+                    content = f.read()
+                # Replace existing User Profile section
+                updated = re.sub(
+                    r"User Profile\n.*?(?=\n#|\Z)", new_section, content, flags=re.DOTALL
+                )
+                with open(path, "w") as f:
+                    f.write(updated)
+                return
+        except Exception:
+            continue
 
 
 def get_setup_questions() -> list[dict]:
