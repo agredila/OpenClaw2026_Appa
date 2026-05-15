@@ -2,7 +2,7 @@
 APPA Learner — Self-Rewriting Scoring Prompt
 
 Responsibilities:
-- Run weekly (Hermes cron: Sunday 08:00 WIB)
+- Run weekly (QwenPaw cron: Sunday 08:00 WIB)
 - Read last 7 days of user feedback signals from Firestore
 - Call LLM to rewrite APPA's scoring criteria based on patterns
 - Save new prompt version to Firestore
@@ -44,7 +44,7 @@ Scoring criteria:
 def rewrite_scoring_prompt() -> None:
     """
     Weekly job: read feedback, rewrite scoring prompt, save new version.
-    Called by Hermes cron.
+    Called by QwenPaw cron every Sunday 08:00 WIB.
     """
     user_id = "default"
     feedback_data = _load_feedback(user_id)

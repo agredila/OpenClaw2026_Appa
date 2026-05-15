@@ -64,7 +64,7 @@ def handle_feedback(pipeline_id: str, relevant: bool) -> None:
 
 
 def send_morning_digest() -> None:
-    """Triggered by Hermes cron at 07:00 WIB. Reads yesterday's contacts."""
+    """Triggered by QwenPaw cron at 07:00 WIB. Reads yesterday's contacts."""
     from skills.cepoy import get_yesterday_contacts
     contacts = get_yesterday_contacts()
     if not contacts:
