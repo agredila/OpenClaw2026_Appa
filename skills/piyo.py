@@ -14,10 +14,8 @@ from __future__ import annotations
 
 import json
 import os
-import smtplib
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
+import requests
 from base import chat, fast_model, read_pipeline, read_user_profile, write_pipeline
 from radar_types import PipelineStatus
 
@@ -112,32 +110,32 @@ def _compose_alert(state: dict) -> str:
 
 
 def _send_email(alert_text: str, proposal_text: str, pipeline_id: str, recipient: str) -> None:
-    """Send via SMTP — works with Gmail App Password, no Google Console needed."""
+    """Send via Resend API — free tier 3,000 emails/month, no Google Console needed."""
     try:
-        smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-        smtp_port = int(os.environ.get("SMTP_PORT", "587"))
-        smtp_user = os.environ.get("SMTP_USER", "")
-        smtp_pass = os.environ.get("SMTP_PASSWORD", "")
-
-        if not smtp_user or not smtp_pass:
-            return  # SMTP not configured — skip silently
-
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = "🎯 RADAR: Peluang Bisnis Baru Terdeteksi"
-        msg["From"] = smtp_user
-        msg["To"] = recipient
+        api_key = os.environ.get("RESEND_API_KEY", "")
+        from_email = os.environ.get("RESEND_FROM", "APPA <onboarding@resend.dev>")
+        if not api_key:
+            return  # Resend not configured — skip silently
 
         body = alert_text
         if proposal_text:
             body += f"\n\n{'─'*40}\n📝 DRAFT PROPOSAL\n{'─'*40}\n\n{proposal_text}"
         body += f"\n\n{'─'*40}\nPipeline ID: {pipeline_id[:8]}"
 
-        msg.attach(MIMEText(body, "plain", "utf-8"))
-
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, recipient, msg.as_string())
+        requests.post(
+            "https://api.resend.com/emails",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "from": from_email,
+                "to": [recipient],
+                "subject": "🎯 RADAR: Peluang Bisnis Baru Terdeteksi",
+                "text": body,
+            },
+            timeout=10,
+        ).raise_for_status()
 
     except Exception as e:
         write_pipeline(pipeline_id, {"email_error": str(e)})
