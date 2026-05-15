@@ -31,6 +31,7 @@ def setup(chat_id: str, answers: dict) -> None:
         "hourly_rate": answers.get("hourly_rate", ""),
         "preferred_categories": answers.get("preferred_categories", []),
         "blacklist_keywords": answers.get("blacklist_keywords", []),
+        "gmail_address": answers.get("gmail_address", ""),
         "scoring_criteria": "",
         "scoring_prompt_version": 1,
         "created_at": now_iso(),
@@ -107,6 +108,11 @@ def get_setup_questions() -> list[dict]:
             "key": "blacklist_keywords",
             "question": "Ada keyword yang mau di-skip otomatis? (pisahkan dengan koma, atau ketik 'tidak ada')\nContoh: design, UI, logo, mobile",
             "parse": lambda ans: [] if "tidak" in ans.lower() else [s.strip() for s in ans.split(",") if s.strip()],
+        },
+        {
+            "key": "gmail_address",
+            "question": "Alamat Gmail kamu apa? Saya akan kirim alert peluang ke sana.\nContoh: nama@gmail.com",
+            "parse": lambda ans: ans.strip(),
         },
     ]
 

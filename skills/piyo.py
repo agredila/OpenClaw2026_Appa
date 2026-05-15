@@ -40,10 +40,7 @@ Keep the whole digest under 150 words."""
 
 
 def deliver(pipeline_id: str) -> None:
-    """
-    Read pipeline state and deliver alert to Gmail + Telegram.
-    Called by Pippoy after proposal is ready.
-    """
+    """Read pipeline state and deliver alert to Gmail + Telegram."""
     state = read_pipeline(pipeline_id)
     if not state:
         return
@@ -52,7 +49,14 @@ def deliver(pipeline_id: str) -> None:
     drive_link = state.get("drive_link")
     research = state.get("research", {})
 
-    _send_gmail(alert_text, drive_link, pipeline_id)
+    # Get user's Gmail from their profile
+    from base import read_user_profile
+    user_id = state.get("opportunity", {}).get("source_channel", "default").split(":")[-1]
+    profile = read_user_profile(user_id) or {}
+    recipient_email = profile.get("gmail_address") or os.environ.get("GMAIL_SENDER_ADDRESS")
+
+    if recipient_email:
+        _send_gmail(alert_text, drive_link, pipeline_id, recipient_email)
     _send_telegram_dm(alert_text, drive_link, pipeline_id, research)
 
     write_pipeline(pipeline_id, {"status": PipelineStatus.DELIVERED.value})
@@ -106,7 +110,7 @@ def _compose_alert(state: dict) -> str:
     return response.choices[0].message.content.strip()
 
 
-def _send_gmail(alert_text: str, drive_link: str | None, pipeline_id: str) -> None:
+def _send_gmail(alert_text: str, drive_link: str | None, pipeline_id: str, recipient: str) -> None:
     try:
         import base64
         from email.mime.text import MIMEText
@@ -122,16 +126,14 @@ def _send_gmail(alert_text: str, drive_link: str | None, pipeline_id: str) -> No
         body += f"\n\n🔗 Pipeline: {pipeline_id[:8]}"
 
         message = MIMEText(body)
-        message["to"] = os.environ["GMAIL_SENDER_ADDRESS"]
+        message["to"] = recipient
         message["subject"] = "🎯 RADAR: New Opportunity Detected"
 
         raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
         service.users().messages().send(userId="me", body={"raw": raw}).execute()
 
     except Exception as e:
-        db().collection("pipelines").document(pipeline_id).set(
-            {"gmail_error": str(e)}, merge=True
-        )
+        write_pipeline(pipeline_id, {"gmail_error": str(e)})
 
 
 def _send_telegram_dm(
