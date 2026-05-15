@@ -18,6 +18,33 @@ from typing import Any, Optional
 import requests
 from openai import OpenAI
 
+# Load .env file from QwenPaw working directory if env vars not set
+def _load_dotenv() -> None:
+    env_paths = [
+        "/app/working/workspaces/default/.env",
+        "/app/working/.env",
+        ".env",
+    ]
+    for path in env_paths:
+        if not os.path.exists(path):
+            continue
+        try:
+            with open(path) as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    key, _, val = line.partition("=")
+                    key = key.strip()
+                    val = val.strip().strip('"').strip("'")
+                    if key and not os.environ.get(key):
+                        os.environ[key] = val
+            break
+        except Exception:
+            continue
+
+_load_dotenv()
+
 # SQLite database path — stored in QwenPaw working directory
 _DB_PATH = os.environ.get(
     "SQLITE_DB_PATH",
