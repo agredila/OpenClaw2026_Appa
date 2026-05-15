@@ -20,6 +20,7 @@ channels:
     monitor_channels: ${DISCORD_MONITOR_CHANNEL_IDS}
 
 skills:
+  - skills/onboard.py
   - skills/guard.py
   - skills/kiyo.py
   - skills/appa.py

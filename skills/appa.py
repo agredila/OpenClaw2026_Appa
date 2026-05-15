@@ -21,7 +21,8 @@ from skills.base import chat, db, new_id, now_iso, read_user_profile, write_pipe
 from skills.guard import AgentTimeout, DailyLimitExceeded, check_and_increment, run_with_timeout
 from skills.types import OpportunityPayload, OpportunityType, PipelineStatus
 
-_DEFAULT_USER_ID = "default"  # Single-user MVP; extend for multi-tenant
+_DEFAULT_USER_ID = "default"  # Fallback for single-user setup
+# Multi-user: pass chat_id as user_id when calling process()
 
 _REASON_SYSTEM = """You are APPA, the orchestrator of RADAR — a business opportunity detection system.
 
@@ -67,12 +68,13 @@ End your response with EXACTLY this JSON on the last line (no trailing text afte
 {"score": <int 1-10>, "route": "opportunity" | "linkedin" | "reject", "rejection_reason": "<string or null>"}"""
 
 
-def process(payload: OpportunityPayload) -> str:
+def process(payload: OpportunityPayload, user_id: str | None = None) -> str:
     """
     Main entry point. Returns pipeline_id.
-    Raises DailyLimitExceeded or AgentTimeout on guard failures.
+    user_id: Telegram chat_id of the user who owns this pipeline.
+             Defaults to "default" for single-user setup.
     """
-    user_id = _DEFAULT_USER_ID
+    user_id = user_id or _DEFAULT_USER_ID
     check_and_increment(user_id)
 
     pipeline_id = new_id()
