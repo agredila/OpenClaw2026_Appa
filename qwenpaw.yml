@@ -10,6 +10,9 @@ model:
   base_url: ${SUMOPOD_API_BASE}
   api_key: ${SUMOPOD_API_KEY}
   default_model: ${MODEL_PRIMARY}
+  enable_thinking: false
+  extra_params:
+    thinking: false
 
 channels:
   telegram:
