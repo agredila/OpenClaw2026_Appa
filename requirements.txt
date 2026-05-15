@@ -4,19 +4,8 @@
 # LLM client (SumoPod uses OpenAI-compatible API)
 openai==1.82.0
 
-# Firestore state management
-google-cloud-firestore==2.20.2
-
-# Google Drive + Gmail APIs
-google-api-python-client==2.170.0
-google-auth==2.40.2
-google-auth-httplib2==0.2.0
-
-# HTTP client (Google Custom Search)
+# HTTP client (DuckDuckGo search, Telegram API, Resend)
 requests==2.32.5
-
-# QwenPaw agent runtime
-qwenpaw>=1.1.7
 
 # Testing
 pytest==8.3.5
