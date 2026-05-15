@@ -118,7 +118,7 @@ def _read_profile_from_memory(user_id: str) -> Optional[dict]:
                 section = match.group(1)
                 profile = {"user_id": user_id}
                 for line in section.splitlines():
-                    line = line.strip().lstrip("•-").strip()
+                    line = line.strip().lstrip("•-").strip().replace("**", "")
                     if ":" not in line:
                         continue
                     key, _, val = line.partition(":")
