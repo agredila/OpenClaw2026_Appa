@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta, timezone
-from base import chat, db, now_iso
+from base import chat, db, now_iso, read_user_profile, write_user_profile, _get_conn
 
 _REWRITE_SYSTEM = """You are APPA's self-improvement module.
 
@@ -76,54 +76,50 @@ def get_current_criteria(user_id: str) -> str:
 
 
 def _load_feedback(user_id: str) -> dict:
-    """Load last 7 days of feedback signals."""
+    """Load last 7 days of feedback signals from SQLite."""
     cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-    docs = (
-        db().collection("pipelines")
-        .where("user_feedback", "!=", None)
-        .where("created_at", ">=", cutoff)
-        .stream()
-    )
-
+    import json as _json
     relevant, irrelevant = [], []
-    for doc in docs:
-        data = doc.to_dict()
-        opp_text = data.get("opportunity", {}).get("raw_text", "")
-        if data.get("user_feedback") is True:
-            relevant.append(opp_text)
-        else:
-            irrelevant.append(opp_text)
-
+    with _get_conn() as conn:
+        rows = conn.execute(
+            "SELECT data FROM pipelines WHERE updated_at >= ?", (cutoff,)
+        ).fetchall()
+        for row in rows:
+            data = _json.loads(row["data"])
+            if data.get("user_feedback") is None:
+                continue
+            opp_text = data.get("opportunity", {}).get("raw_text", "")
+            if data.get("user_feedback") is True:
+                relevant.append(opp_text)
+            else:
+                irrelevant.append(opp_text)
     return {"relevant": relevant, "irrelevant": irrelevant}
 
 
 def _load_current_criteria(user_id: str) -> str:
-    doc = db().collection("user_profiles").document(user_id).get()
-    if doc.exists:
-        return doc.to_dict().get("scoring_criteria", _DEFAULT_CRITERIA)
+    profile = read_user_profile(user_id)
+    if profile:
+        return profile.get("scoring_criteria", _DEFAULT_CRITERIA)
     return _DEFAULT_CRITERIA
 
 
 def _save_new_version(user_id: str, old_criteria: str, new_criteria: str) -> None:
-    profile_ref = db().collection("user_profiles").document(user_id)
-    profile_doc = profile_ref.get()
-    current_version = 1
-    if profile_doc.exists:
-        current_version = profile_doc.to_dict().get("scoring_prompt_version", 1)
-
+    import json as _json
+    profile = read_user_profile(user_id) or {"user_id": user_id}
+    current_version = profile.get("scoring_prompt_version", 1)
     new_version = current_version + 1
 
-    # Archive old version for dashboard diff view
-    db().collection("scoring_prompt_history").document(f"{user_id}:v{current_version}").set({
-        "user_id": user_id,
-        "version": current_version,
-        "criteria": old_criteria,
-        "archived_at": now_iso(),
-    })
+    # Archive old version
+    with _get_conn() as conn:
+        conn.execute(
+            "INSERT OR REPLACE INTO scoring_prompt_history (id, user_id, version, criteria, archived_at) VALUES (?, ?, ?, ?, ?)",
+            (f"{user_id}:v{current_version}", user_id, current_version, old_criteria, now_iso())
+        )
 
-    # Save new version to user profile
-    profile_ref.set({
+    # Save new version
+    profile.update({
         "scoring_criteria": new_criteria,
         "scoring_prompt_version": new_version,
         "scoring_updated_at": now_iso(),
-    }, merge=True)
+    })
+    write_user_profile(user_id, profile)

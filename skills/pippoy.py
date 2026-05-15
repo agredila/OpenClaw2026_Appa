@@ -109,19 +109,18 @@ def run(
 
 
 def _load_past_proposals(user_id: str) -> list[str]:
-    """Load last 3 accepted proposals from Firestore for style matching."""
+    """Load last 3 accepted proposals from SQLite for style matching."""
+    import json as _json
+    from base import _get_conn
     try:
-        docs = (
-            db().collection("proposals")
-            .where("user_id", "==", user_id)
-            .where("accepted", "==", True)
-            .order_by("created_at", direction="DESCENDING")
-            .limit(3)
-            .stream()
-        )
-        return [d.to_dict().get("text", "") for d in docs if d.to_dict().get("text")]
+        with _get_conn() as conn:
+            rows = conn.execute(
+                "SELECT text FROM proposals WHERE user_id = ? AND accepted = 1 ORDER BY created_at DESC LIMIT 3",
+                (user_id,)
+            ).fetchall()
+        return [row["text"] for row in rows if row["text"]]
     except Exception:
-        return []  # No past proposals — Pippoy writes naturally without style constraint
+        return []
 
 
 def _save_to_drive(pipeline_id: str, text: str, payload: OpportunityPayload) -> str | None:

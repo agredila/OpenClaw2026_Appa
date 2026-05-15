@@ -93,13 +93,14 @@ def run(pipeline_id: str, linkedin_url: str) -> ContactSummary | None:
 
 def get_yesterday_contacts() -> list[dict]:
     """Fetch contacts added in the last 24 hours for morning digest."""
+    import json as _json
+    from base import _get_conn
     yesterday = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
-    docs = (
-        db().collection("contacts")
-        .where("created_at", ">=", yesterday)
-        .stream()
-    )
-    return [d.to_dict() for d in docs]
+    with _get_conn() as conn:
+        rows = conn.execute(
+            "SELECT data FROM contacts WHERE created_at >= ?", (yesterday,)
+        ).fetchall()
+    return [_json.loads(row["data"]) for row in rows]
 
 
 def _extract_name_from_url(url: str) -> str:

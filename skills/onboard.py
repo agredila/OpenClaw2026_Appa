@@ -16,7 +16,7 @@ Usage:
 """
 from __future__ import annotations
 
-from base import db, now_iso
+from base import db, now_iso, write_user_profile
 
 
 def setup(chat_id: str, answers: dict) -> None:
@@ -36,11 +36,11 @@ def setup(chat_id: str, answers: dict) -> None:
         "created_at": now_iso(),
         "updated_at": now_iso(),
     }
-    # Primary: Firestore
+    # Primary: SQLite via write_user_profile
     try:
-        db().collection("user_profiles").document(chat_id).set(profile, merge=True)
+        write_user_profile(chat_id, profile)
     except Exception:
-        pass  # Firestore not configured yet — fallback to PROFILE.md
+        pass
 
     # Fallback: write structured data to PROFILE.md for QwenPaw memory
     _write_profile_to_memory(profile)
