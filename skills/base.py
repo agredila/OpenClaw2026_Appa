@@ -50,7 +50,8 @@ def chat(
 
 
 def fast_model() -> str:
-    return os.environ.get("MODEL_FAST", "MiniMax-M2.7-highspeed")
+    # Falls back to primary model if MODEL_FAST not set — single model setup is fine
+    return os.environ.get("MODEL_FAST") or os.environ.get("MODEL_PRIMARY", "kimi-k2.6")
 
 
 # ── Firestore ─────────────────────────────────────────────────────────────────
