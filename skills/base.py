@@ -101,6 +101,7 @@ def _read_profile_from_memory(user_id: str) -> Optional[dict]:
     """Parse user profile from QwenPaw's PROFILE.md if it exists."""
     import re
     profile_paths = [
+        "/app/working/workspaces/default/PROFILE.md",  # QwenPaw actual path
         "/app/working/PROFILE.md",
         os.path.expanduser("~/.qwenpaw/PROFILE.md"),
         "PROFILE.md",

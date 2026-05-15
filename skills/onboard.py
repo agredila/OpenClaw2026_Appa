@@ -49,7 +49,11 @@ def setup(chat_id: str, answers: dict) -> None:
 def _write_profile_to_memory(profile: dict) -> None:
     """Append/update User Profile section in PROFILE.md."""
     import re
-    profile_paths = ["/app/working/PROFILE.md", "PROFILE.md"]
+    profile_paths = [
+        "/app/working/workspaces/default/PROFILE.md",  # QwenPaw actual path
+        "/app/working/PROFILE.md",
+        "PROFILE.md",
+    ]
     skills_str = ", ".join(profile.get("skills", []))
     categories_str = ", ".join(profile.get("preferred_categories", []))
     blacklist_str = ", ".join(profile.get("blacklist_keywords", [])) or "tidak ada"
