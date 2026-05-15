@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import json
 import os
-from skills.base import chat, db, write_pipeline
-from skills.types import OpportunityPayload, PipelineStatus, ResearchContext
+from base import chat, db, write_pipeline
+from radar_types import OpportunityPayload, PipelineStatus, ResearchContext
 
 _DRAFT_SYSTEM = """You are Pippoy, a professional proposal writing agent for a freelancer/agency.
 
@@ -102,7 +102,7 @@ def run(
     })
 
     # Final step — deliver via Piyo
-    from skills import piyo
+    import piyo
     piyo.deliver(pipeline_id)
 
     return drive_link

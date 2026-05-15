@@ -7,7 +7,7 @@ Prevents runaway API costs and enforces daily limits.
 from __future__ import annotations
 
 import os
-from skills.base import get_daily_usage, increment_daily_usage
+from base import get_daily_usage, increment_daily_usage
 
 
 class DailyLimitExceeded(Exception):

@@ -16,7 +16,7 @@ Usage:
 """
 from __future__ import annotations
 
-from skills.base import db, now_iso
+from base import db, now_iso
 
 
 def setup(chat_id: str, answers: dict) -> None:

@@ -13,8 +13,8 @@ Model: kimi-k2.6 (needs to synthesize search results into structured analysis)
 from __future__ import annotations
 
 import json
-from skills.base import chat, google_search, write_pipeline
-from skills.types import OpportunityPayload, PipelineStatus, ResearchContext
+from base import chat, google_search, write_pipeline
+from radar_types import OpportunityPayload, PipelineStatus, ResearchContext
 
 _RESEARCH_SYSTEM = """You are Pippi, a research agent. Analyze the opportunity and search results.
 
@@ -94,7 +94,7 @@ def run(pipeline_id: str, payload: OpportunityPayload, profile: dict) -> Researc
     })
 
     # Sequential: Pippoy runs only after Pippi completes
-    from skills import pippoy
+    import pippoy
     pippoy.run(pipeline_id, payload, research, profile)
 
     return research

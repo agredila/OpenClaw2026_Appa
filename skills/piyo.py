@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import json
 import os
-from skills.base import chat, db, fast_model, read_pipeline, write_pipeline
-from skills.types import PipelineStatus
+from base import chat, db, fast_model, read_pipeline, write_pipeline
+from radar_types import PipelineStatus
 
 _COMPOSE_SYSTEM = """You are Piyo, a notification composer.
 
@@ -65,7 +65,7 @@ def handle_feedback(pipeline_id: str, relevant: bool) -> None:
 
 def send_morning_digest() -> None:
     """Triggered by QwenPaw cron at 07:00 WIB. Reads yesterday's contacts."""
-    from skills.cepoy import get_yesterday_contacts
+    from cepoy import get_yesterday_contacts
     contacts = get_yesterday_contacts()
     if not contacts:
         return

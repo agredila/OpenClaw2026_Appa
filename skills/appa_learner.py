@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timedelta, timezone
-from skills.base import chat, db, now_iso
+from base import chat, db, now_iso
 
 _REWRITE_SYSTEM = """You are APPA's self-improvement module.
 

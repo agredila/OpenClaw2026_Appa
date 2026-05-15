@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import json
 import re
-from skills.base import chat, fast_model, new_id, now_iso
-from skills.types import OpportunityPayload, OpportunityType
+from base import chat, fast_model, new_id, now_iso
+from radar_types import OpportunityPayload, OpportunityType
 
 _LINKEDIN_PATTERN = re.compile(r"https?://(www\.)?linkedin\.com/in/[^\s]+", re.I)
 

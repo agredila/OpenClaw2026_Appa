@@ -17,9 +17,9 @@ from __future__ import annotations
 
 import json
 import os
-from skills.base import chat, db, new_id, now_iso, read_user_profile, write_pipeline
-from skills.guard import AgentTimeout, DailyLimitExceeded, check_and_increment, run_with_timeout
-from skills.types import OpportunityPayload, OpportunityType, PipelineStatus
+from base import chat, db, new_id, now_iso, read_user_profile, write_pipeline
+from guard import AgentTimeout, DailyLimitExceeded, check_and_increment, run_with_timeout
+from radar_types import OpportunityPayload, OpportunityType, PipelineStatus
 
 _DEFAULT_USER_ID = "default"  # Fallback for single-user setup
 # Multi-user: pass chat_id as user_id when calling process()
@@ -100,7 +100,7 @@ def process(payload: OpportunityPayload, user_id: str | None = None) -> str:
     })
 
     # Load latest scoring criteria (may have been rewritten by APPA Learner)
-    from skills.appa_learner import get_current_criteria
+    from appa_learner import get_current_criteria
     current_criteria = get_current_criteria(user_id)
     system_prompt = _REASON_SYSTEM.replace(
         "## Scoring Criteria (may be updated by APPA Learner weekly)",
@@ -225,18 +225,18 @@ def _set_status(pipeline_id: str, status: PipelineStatus) -> None:
 
 def _delegate_pippi(pipeline_id: str, payload: OpportunityPayload, profile: dict) -> None:
     """Run Pippi. Pippoy runs sequentially inside pippi.run() after research completes."""
-    from skills import pippi
+    import pippi
     try:
         run_with_timeout(lambda: pippi.run(pipeline_id, payload, profile))
     except AgentTimeout:
         write_pipeline(pipeline_id, {"pippi_status": "timeout"})
         # Still deliver a partial alert via Piyo
-        from skills import piyo
+        import piyo
         piyo.deliver(pipeline_id)
 
 
 def _delegate_cepoy(pipeline_id: str, payload: OpportunityPayload) -> None:
-    from skills import cepoy
+    import cepoy
     try:
         run_with_timeout(lambda: cepoy.run(pipeline_id, payload.linkedin_url or ""))
     except AgentTimeout:

@@ -15,8 +15,8 @@ from __future__ import annotations
 import json
 import re
 from datetime import datetime, timedelta, timezone
-from skills.base import chat, db, google_search, new_id, now_iso, write_contact
-from skills.types import ContactSummary
+from base import chat, db, google_search, new_id, now_iso, write_contact
+from radar_types import ContactSummary
 
 _SUMMARIZE_SYSTEM = """You are Cepoy, a contact intelligence agent.
 
