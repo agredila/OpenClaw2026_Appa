@@ -1,0 +1,39 @@
+# QwenPaw Configuration — RADAR
+# https://qwenpaw.agentscope.io/docs/config
+
+agent:
+  name: RADAR
+  context_file: RADAR.context.md
+
+model:
+  provider: openai_compatible
+  base_url: ${SUMOPOD_API_BASE}
+  api_key: ${SUMOPOD_API_KEY}
+  default_model: ${MODEL_PRIMARY}
+
+channels:
+  telegram:
+    token: ${TELEGRAM_BOT_TOKEN}
+    monitor_chats: ${TELEGRAM_MONITOR_CHAT_IDS}
+  discord:
+    token: ${DISCORD_BOT_TOKEN}
+    monitor_channels: ${DISCORD_MONITOR_CHANNEL_IDS}
+
+skills:
+  - skills/guard.py
+  - skills/kiyo.py
+  - skills/appa.py
+  - skills/appa_learner.py
+  - skills/pippi.py
+  - skills/pippoy.py
+  - skills/cepoy.py
+  - skills/piyo.py
+
+cron:
+  - schedule: "0 0 * * *"        # 07:00 WIB = 00:00 UTC
+    skill: piyo.send_morning_digest
+  - schedule: "0 1 * * 0"        # Sunday 08:00 WIB = 01:00 UTC
+    skill: appa_learner.rewrite_scoring_prompt
+
+memory:
+  enabled: true

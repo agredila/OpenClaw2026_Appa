@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  radar:
+    image: agentscope/qwenpaw:latest
+    container_name: radar
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./qwenpaw.yml:/app/qwenpaw.yml:ro
+      - ./RADAR.context.md:/app/RADAR.context.md:ro
+      - ./skills:/app/skills:ro
+      - radar-data:/app/working
+    ports:
+      - "127.0.0.1:8088:8088"   # QwenPaw console — localhost only
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  radar-data:
+    driver: local

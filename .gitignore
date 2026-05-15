@@ -1,0 +1,31 @@
+# ── Secrets — NEVER commit ────────────────────────────────────────────────────
+.env
+.env.local
+.env.production
+# .env.example is intentionally NOT ignored — it has no real values
+
+# Google credential JSON files
+*credentials*.json
+*service-account*.json
+*serviceaccount*.json
+secrets/
+.secrets/
+
+# Catch-all for any JSON that isn't package.json
+# (uncomment if you want strict mode — will also block package.json)
+# *.json
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ── Node / Next.js ────────────────────────────────────────────────────────────
+node_modules/
+.next/
+out/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
