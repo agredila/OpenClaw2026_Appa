@@ -65,6 +65,27 @@ docker-compose up -d
 # Console at http://localhost:8088
 ```
 
+## Discord Bot Setup
+
+Discord requires the bot to be **invited by a server admin** before it can read messages. This is Discord's official bot model — no CAPTCHA, no verification issues.
+
+**Steps:**
+
+1. Go to [Discord Developer Portal](https://discord.com/developers/applications) → your app → **OAuth2 → URL Generator**
+2. Select scopes: `bot`
+3. Select permissions: `Read Messages/View Channels`
+4. Copy the generated URL and open it in your browser
+5. Select the server you want RADAR to monitor → **Authorize**
+
+Or use this URL template (replace `YOUR_CLIENT_ID`):
+```
+https://discord.com/oauth2/authorize?client_id=YOUR_CLIENT_ID&scope=bot&permissions=1024
+```
+
+Once invited, copy the channel ID (right-click channel → Copy Channel ID) and set it as `DISCORD_MONITOR_CHANNEL_IDS` in `.env`.
+
+> **Note:** RADAR can only monitor servers where the bot has been invited by an admin. It cannot join arbitrary servers.
+
 ## Environment Variables
 
 See `.env.example` for the full list. Required keys:
